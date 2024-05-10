@@ -19,7 +19,7 @@ class Module(ABC):
         self.training = True
 
     @abstractmethod
-    def compute_output(self, input: np.ndarray) -> np.ndarray:
+    def compute_output(self, input: np.array) -> np.array:
         """
         Compute output for forward pass, i.e. y = f(x)
         :param input: module input (x)
@@ -28,7 +28,7 @@ class Module(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def compute_grad_input(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
+    def compute_grad_input(self, input: np.array, grad_output: np.array) -> np.array:
         """
         Compute gradient of loss w.r.t. output, i.e. dl/dx = dl/df * df/dx
         :param input: module input (x)
@@ -37,7 +37,7 @@ class Module(ABC):
         """
         raise NotImplementedError
 
-    def update_grad_parameters(self, input: np.ndarray, grad_output: np.ndarray):
+    def update_grad_parameters(self, input: np.array, grad_output: np.array):
         """
         Update gradient of loss w.r.t. parameters, i.e. dl/dw = dl/df * df/dw
         :param input: module input (x)
@@ -45,7 +45,7 @@ class Module(ABC):
         """
         pass
 
-    def __call__(self, input: np.ndarray) -> np.ndarray:
+    def __call__(self, input: np.array) -> np.array:
         """
         Alias for 'forward' method
         :param input: module input
@@ -53,7 +53,7 @@ class Module(ABC):
         """
         return self.forward(input)
 
-    def forward(self, input: np.ndarray) -> np.ndarray:
+    def forward(self, input: np.array) -> np.array:
         """
         Forward pass through the module
         :param input: module input
@@ -62,7 +62,7 @@ class Module(ABC):
         self.output = self.compute_output(input)
         return self.output
 
-    def backward(self, input: np.ndarray, grad_output: np.ndarray) -> np.ndarray:
+    def backward(self, input: np.array, grad_output: np.array) -> np.array:
         """
         Backward pass through the module
         :param input: module input
@@ -91,13 +91,13 @@ class Module(ABC):
         """
         pass
 
-    def parameters(self) -> List[np.ndarray]:
+    def parameters(self) -> List[np.array]:
         """
         Get list of all trainable parameters
         """
         return []
 
-    def parameters_grad(self) -> List[np.ndarray]:
+    def parameters_grad(self) -> List[np.array]:
         """
         Get list of all parameters gradients
         """
@@ -118,7 +118,7 @@ class Criterion(ABC):
         self.output = None
 
     @abstractmethod
-    def compute_output(self, input: np.ndarray, target: np.ndarray) -> float:
+    def compute_output(self, input: np.array, target: np.array) -> float:
         """
         Compute loss value, i.e. l(f, y)
         :param input: neural network predictions (f)
@@ -128,7 +128,7 @@ class Criterion(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def compute_grad_input(self, input: np.ndarray, target: np.ndarray) -> np.ndarray:
+    def compute_grad_input(self, input: np.array, target: np.array) -> np.array:
         """
         Compute gradient of loss w.r.t. input, i.e. dl/df
         :param input: neural network predictions (f)
@@ -137,7 +137,7 @@ class Criterion(ABC):
         """
         raise NotImplementedError
 
-    def __call__(self, input: np.ndarray, target: np.ndarray) -> float:
+    def __call__(self, input: np.array, target: np.array) -> float:
         """
         Alias for 'forward' method
         :param input: neural network predictions
@@ -146,7 +146,7 @@ class Criterion(ABC):
         """
         return self.forward(input, target)
 
-    def forward(self, input: np.ndarray, target: np.ndarray) -> float:
+    def forward(self, input: np.array, target: np.array) -> float:
         """
         Forward pass through the criterion
         :param input: neural network predictions
@@ -156,7 +156,7 @@ class Criterion(ABC):
         self.output = self.compute_output(input, target)
         return self.output
 
-    def backward(self, input: np.ndarray, target: np.ndarray) -> np.ndarray:
+    def backward(self, input: np.array, target: np.array) -> np.array:
         """
         Backward pass through the criterion
         :param input: neural network predictions
