@@ -33,6 +33,7 @@ def test_criterion(input_shape, mse=True, outer_iters=100, random_seed=None):
 
         x2 = torch.from_numpy(x1)
         y2 = torch.from_numpy(y1)
+        y2 = y2.long() if not mse else y2 # Pytorch test fix
         x2.requires_grad = True
 
         l1 = module1(x1, y1)
