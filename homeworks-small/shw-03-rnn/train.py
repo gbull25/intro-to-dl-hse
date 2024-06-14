@@ -25,11 +25,8 @@ def plot_losses(train_losses: List[float], val_losses: List[float]):
     axs[0].plot(range(1, len(val_losses) + 1), val_losses, label='val')
     axs[0].set_ylabel('loss')
 
-    """
-    YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
-    Calculate train and validation perplexities given lists of losses
-    """
-    train_perplexities, val_perplexities = [], []
+    train_perplexities = torch.exp(torch.Tensor(train_losses))
+    val_perplexities = torch.exp(torch.Tensor(val_losses))
 
     axs[1].plot(range(1, len(train_perplexities) + 1), train_perplexities, label='train')
     axs[1].plot(range(1, len(val_perplexities) + 1), val_perplexities, label='val')
@@ -58,12 +55,15 @@ def training_epoch(model: LanguageModel, optimizer: torch.optim.Optimizer, crite
 
     model.train()
     for indices, lengths in tqdm(loader, desc=tqdm_desc):
-        """
-        YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
-        Process one training step: calculate loss,
-        call backward and make one optimizer step.
-        Accumulate sum of losses for different batches in train_loss
-        """
+        optimizer.zero_grad()
+        indices = indices[:, :lengths.max()].to(device)
+        logits = model(indices[:, :-1], lengths - 1)
+
+        loss = criterion(logits.transpose(1, 2), indices[:, 1:])
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item() * indices.shape[0]
 
     train_loss /= len(loader.dataset)
     return train_loss
@@ -85,11 +85,10 @@ def validation_epoch(model: LanguageModel, criterion: nn.Module,
 
     model.eval()
     for indices, lengths in tqdm(loader, desc=tqdm_desc):
-        """
-        YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
-        Process one validation step: calculate loss.
-        Accumulate sum of losses for different batches in val_loss
-        """
+        indices = indices[:, :lengths.max()].to(device)
+        logits = model(indices[:, :-1], lengths - 1)
+        loss = criterion(logits.transpose(1, 2), indices[:, 1:])
+        val_loss += loss.item() * indices.shape[0]
 
     val_loss /= len(loader.dataset)
     return val_loss
@@ -127,6 +126,7 @@ def train(model: LanguageModel, optimizer: torch.optim.Optimizer, scheduler: Opt
         val_losses += [val_loss]
         plot_losses(train_losses, val_losses)
 
-        print('Generation examples:')
+        print(f'Generation examples after {epoch=}:')
         for _ in range(num_examples):
             print(model.inference())
+        print()

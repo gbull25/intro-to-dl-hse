@@ -4,6 +4,8 @@ from typing import Union, List, Tuple
 from sentencepiece import SentencePieceTrainer, SentencePieceProcessor
 from torch.utils.data import Dataset
 
+from sklearn.model_selection import train_test_split
+
 
 class TextDataset(Dataset):
     TRAIN_VAL_RANDOM_SEED = 42
@@ -11,7 +13,7 @@ class TextDataset(Dataset):
 
     def __init__(self, data_file: str, train: bool = True, sp_model_prefix: str = None,
                  vocab_size: int = 2000, normalization_rule_name: str = 'nmt_nfkc_cf',
-                 model_type: str = 'bpe', max_length: int = 128):
+                 model_type: str = 'bpe', max_length: int = 1024):
         """
         Dataset with texts, supporting BPE tokenizer
         :param data_file: txt file containing texts
@@ -27,7 +29,7 @@ class TextDataset(Dataset):
             SentencePieceTrainer.train(
                 input=data_file, vocab_size=vocab_size,
                 model_type=model_type, model_prefix=sp_model_prefix,
-                normalization_rule_name=normalization_rule_name
+                normalization_rule_name=normalization_rule_name, pad_id=42
             )
         # load tokenizer from file
         self.sp_model = SentencePieceProcessor(model_file=sp_model_prefix + '.model')
@@ -35,12 +37,8 @@ class TextDataset(Dataset):
         with open(data_file) as file:
             texts = file.readlines()
 
-        """
-        YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
-        Split texts to train and validation fixing self.TRAIN_VAL_RANDOM_SEED
-        The validation ratio is self.VAL_RATIO
-        """
-        train_texts, val_texts = None, None
+
+        train_texts, val_texts = train_test_split(texts, test_size=self.VAL_RATIO, random_state=self.TRAIN_VAL_RANDOM_SEED)
         self.texts = train_texts if train else val_texts
         self.indices = self.sp_model.encode(self.texts)
 
@@ -83,14 +81,13 @@ class TextDataset(Dataset):
         :param item: text id
         :return: encoded text indices and its actual length (including BOS and EOS specials)
         """
-        # These are placeholders, you may remove them.
-        indices = torch.randint(high=self.vocab_size, size=(self.max_length, ))
-        length = torch.randint(low=1, high=self.max_length + 1, size=()).item()
-        """
-        YOUR CODE HERE (⊃｡•́‿•̀｡)⊃━✿✿✿✿✿✿
-        Take corresponding index array from self.indices,
-        add special tokens (self.bos_id and self.eos_id) and 
-        pad to self.max_length using self.pad_id.
-        Return padded indices of size (max_length, ) and its actual length
-        """
-        return indices, length
+        indices = []
+        indices.append(self.bos_id)
+        indices.extend(self.indices[item])
+        indices.append(self.eos_id)
+
+        length = len(indices)
+
+        indices.extend([self.pad_id] * (self.max_length - length))
+
+        return torch.LongTensor(indices), length
